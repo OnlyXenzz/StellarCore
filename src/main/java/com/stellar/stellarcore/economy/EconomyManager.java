@@ -131,4 +131,9 @@ public class EconomyManager {
         String symbol = StellarCore.getInstance().getConfig().getString("economy.currency_symbol", "⍟");
         return TextUtils.format("&6" + symbol + "&ᴇ" + String.format("%.2f", amount));
     }
+    
+    // METHOD BARU
+    public int getTotalPlayers() {
+        return balances.size();
+    }
 }
