@@ -1,0 +1,34 @@
+name: StellarCore
+version: 1.0.0
+main: com.stellar.stellarcore.StellarCore
+api-version: 1.20
+description: §6§ʟꜱᴛᴇʟʟᴀʀᴄᴏʀᴇ §7- ᴇᴄᴏɴᴏᴍʏ ᴘʟᴜɢɪɴ
+author: StellarProject
+
+commands:
+  sc:
+    aliases: [stellar, s]
+    description: §ᴀᴍᴀɪɴ ꜱᴛᴇʟʟᴀʀᴄᴏʀᴇ ᴄᴏᴍᴍᴀɴᴅ
+  balance:
+    aliases: [bal, money]
+    description: §ᴀᴄʜᴇᴄᴋ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ
+  pay:
+    description: §ᴀꜱᴇɴᴅ ᴍᴏɴᴇʏ ᴛᴏ ᴀɴᴏᴛʜᴇʀ ᴘʟᴀʏᴇʀ
+  top:
+    aliases: [baltop, richest]
+    description: §ᴀᴠɪᴇᴡ ʀɪᴄʜᴇꜱᴛ ᴘʟᴀʏᴇʀꜱ
+  daily:
+    aliases: [dailyreward, claim]
+    description: §ᴀᴄʟᴀɪᴍ ᴅᴀɪʟʏ ʀᴇᴡᴀʀᴅ
+  stellaradmin:
+    aliases: [sadmin]
+    description: §ᴄᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅꜱ
+    permission: stellar.admin
+  shop:
+    aliases: [stellarshop]
+    description: §ᴀᴏᴘᴇɴ ꜱʜᴏᴘ
+
+permissions:
+  stellar.admin:
+    description: ᴀᴅᴍɪɴ ᴀᴄᴄᴇꜱꜱ
+    default: op
