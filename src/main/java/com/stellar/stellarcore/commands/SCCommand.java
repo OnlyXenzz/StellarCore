@@ -3,10 +3,14 @@ package com.stellar.stellarcore.commands;
 import com.stellar.stellarcore.StellarCore;
 import com.stellar.stellarcore.utils.TextUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class SCCommand implements CommandExecutor {
     
@@ -72,11 +76,11 @@ public class SCCommand implements CommandExecutor {
                 break;
                 
             case "top":
-                List<java.util.Map.Entry<UUID, Double>> top = StellarCore.getInstance().getEconomyManager().getTopBalances(10);
+                List<Map.Entry<UUID, Double>> top = StellarCore.getInstance().getEconomyManager().getTopBalances(10);
                 sender.sendMessage(TextUtils.format("&6&ʟ=== ᴛᴏᴘ 10 ʀɪᴄʜᴇꜱᴛ ꜱᴛᴇʟʟᴀʀ ==="));
                 int rank = 1;
-                for (java.util.Map.Entry<UUID, Double> entry : top) {
-                    org.bukkit.OfflinePlayer off = Bukkit.getOfflinePlayer(entry.getKey());
+                for (Map.Entry<UUID, Double> entry : top) {
+                    OfflinePlayer off = Bukkit.getOfflinePlayer(entry.getKey());
                     String name = off.getName() != null ? off.getName() : "Unknown";
                     sender.sendMessage(TextUtils.format("&7" + rank + ". &ғ" + name + " &7- " + 
                         StellarCore.getInstance().getEconomyManager().formatCurrency(entry.getValue())));
@@ -97,7 +101,9 @@ public class SCCommand implements CommandExecutor {
                     sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴏɴʟʏ!"));
                     return true;
                 }
-                sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀꜱʜᴏᴘ ᴄᴏᴍɪɴɢ ꜱᴏᴏɴ!"));
+                // Open shop
+                com.stellar.stellarcore.commands.ShopCommand shop = new com.stellar.stellarcore.commands.ShopCommand();
+                shop.onCommand(sender, cmd, label, new String[0]);
                 break;
                 
             case "status":
@@ -175,6 +181,35 @@ public class SCCommand implements CommandExecutor {
                     StellarCore.getInstance().getEconomyManager().formatCurrency(setAmount)));
                 break;
                 
+            case "take":
+                if (!sender.hasPermission("stellar.admin")) {
+                    sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
+                    return true;
+                }
+                if (args.length < 3) {
+                    sender.sendMessage(TextUtils.format("&ᴄᴜꜱᴀɢᴇ: &7/ꜱᴄ ᴛᴀᴋᴇ <ᴘʟᴀʏᴇʀ> <ᴀᴍᴏᴜɴᴛ>"));
+                    return true;
+                }
+                Player takeTarget = Bukkit.getPlayer(args[1]);
+                if (takeTarget == null) {
+                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!"));
+                    return true;
+                }
+                double takeAmount;
+                try {
+                    takeAmount = Double.parseDouble(args[2]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(TextUtils.format("&ᴄɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ!"));
+                    return true;
+                }
+                if (StellarCore.getInstance().getEconomyManager().withdraw(takeTarget, takeAmount)) {
+                    sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄʀᴇᴍᴏᴠᴇᴅ " + 
+                        StellarCore.getInstance().getEconomyManager().formatCurrency(takeAmount) + " &ᴄꜰʀᴏᴍ &ʙ" + takeTarget.getName()));
+                } else {
+                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴅᴏᴇꜱɴ'ᴛ ʜᴀᴠᴇ ᴇɴᴏᴜɢʜ!"));
+                }
+                break;
+                
             case "stats":
                 if (!sender.hasPermission("stellar.admin")) {
                     sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
@@ -182,6 +217,7 @@ public class SCCommand implements CommandExecutor {
                 }
                 sender.sendMessage(TextUtils.format("&6&ʟ=== ꜱᴛᴇʟʟᴀʀᴄᴏʀᴇ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ ==="));
                 sender.sendMessage(TextUtils.format("&7ᴏɴʟɪɴᴇ ᴘʟᴀʏᴇʀꜱ: &ᴀ" + Bukkit.getOnlinePlayers().size()));
+                sender.sendMessage(TextUtils.format("&7ᴛᴏᴛᴀʟ ʀᴇɢɪꜱᴛᴇʀᴇᴅ: &ᴀ" + StellarCore.getInstance().getEconomyManager().getTotalPlayers()));
                 sender.sendMessage(TextUtils.format("&7ᴠᴇʀꜱɪᴏɴ: &ᴀ" + StellarCore.getInstance().getDescription().getVersion()));
                 break;
                 
@@ -215,6 +251,7 @@ public class SCCommand implements CommandExecutor {
             sender.sendMessage(TextUtils.format("&7/ꜱᴄ ʀᴇʟᴏᴀᴅ &8- &7ʀᴇʟᴏᴀᴅ ᴄᴏɴꜰɪɢ"));
             sender.sendMessage(TextUtils.format("&7/ꜱᴄ ɢɪᴠᴇ &8- &7ɢɪᴠᴇ ᴍᴏɴᴇʏ ᴛᴏ ᴘʟᴀʏᴇʀ"));
             sender.sendMessage(TextUtils.format("&7/ꜱᴄ ꜱᴇᴛ &8- &7ꜱᴇᴛ ᴘʟᴀʏᴇʀ ʙᴀʟᴀɴᴄᴇ"));
+            sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴛᴀᴋᴇ &8- &7ʀᴇᴍᴏᴠᴇ ᴍᴏɴᴇʏ ꜰʀᴏᴍ ᴘʟᴀʏᴇʀ"));
             sender.sendMessage(TextUtils.format("&7/ꜱᴄ ꜱᴛᴀᴛꜱ &8- &7ᴠɪᴇᴡ ᴘʟᴜɢɪɴ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ"));
             sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴅᴇʙᴜɢ &8- &7ᴛᴏɢɢʟᴇ ᴅᴇʙᴜɢ ᴍᴏᴅᴇ"));
         }
