@@ -160,7 +160,7 @@ public class ShopCommand implements CommandExecutor, Listener {
         mobDrops.put(Material.SLIME_BALL, 12);
         mobDrops.put(Material.PHANTOM_MEMBRANE, 50);
         mobDrops.put(Material.RABBIT_FOOT, 30);
-        mobDrops.put(Material.TURTLE_SCUTE, 25);
+        mobDrops.put(Material.SCUTE, 25);  // ← SUDAH DIPERBAIKI
         categories.put("ᴍᴏʙ ᴅʀᴏᴘꜱ", mobDrops);
         
         // === KATEGORI DYES ===
@@ -237,7 +237,6 @@ public class ShopCommand implements CommandExecutor, Listener {
     }
     
     private ItemStack createCategoryItem(String category) {
-        ItemStack item;
         Material material;
         
         // Pilih icon berdasarkan kategori
@@ -255,7 +254,7 @@ public class ShopCommand implements CommandExecutor, Listener {
             default: material = Material.CHEST;
         }
         
-        item = new ItemStack(material);
+        ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(TextUtils.format("&6&ʟ" + category));
         meta.setLore(Arrays.asList(
@@ -271,17 +270,12 @@ public class ShopCommand implements CommandExecutor, Listener {
         
         playerCategory.put(p.getUniqueId(), category);
         
-        int totalItems = items.size();
-        int itemsPerPage = 45;
-        int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
+        Inventory inv = Bukkit.createInventory(null, 54, TextUtils.format("&6&ʟ" + category + " &8- &7ᴘᴀɢᴇ 1"));
         
-        Inventory inv = Bukkit.createInventory(null, 54, TextUtils.format("&6&ʟ" + category + " &8- &7ᴘᴀɢᴇ 1/" + totalPages));
-        
-        Material[] materials = items.keySet().toArray(new Material[0]);
         int slot = 0;
-        for (Material mat : materials) {
-            int price = items.get(mat);
-            inv.setItem(slot, createItemDisplay(mat, price));
+        for (Map.Entry<Material, Integer> entry : items.entrySet()) {
+            if (slot >= 45) break;
+            inv.setItem(slot, createItemDisplay(entry.getKey(), entry.getValue()));
             slot++;
         }
         
@@ -307,7 +301,14 @@ public class ShopCommand implements CommandExecutor, Listener {
         ItemMeta meta = item.getItemMeta();
         
         String name = material.name().toLowerCase().replace("_", " ");
-        name = name.substring(0, 1).toUpperCase() + name.substring(1);
+        String[] words = name.split(" ");
+        StringBuilder capitalized = new StringBuilder();
+        for (String word : words) {
+            if (word.length() > 0) {
+                capitalized.append(word.substring(0, 1).toUpperCase()).append(word.substring(1)).append(" ");
+            }
+        }
+        name = capitalized.toString().trim();
         
         meta.setDisplayName(TextUtils.format("&ғ" + name));
         meta.setLore(Arrays.asList(
