@@ -1,0 +1,24 @@
+# IDE files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# Build files
+target/
+*.jar
+!.github/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Config dengan data sensitif
+plugins/
+config.yml
+balances.yml
