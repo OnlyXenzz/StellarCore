@@ -17,7 +17,7 @@ public class TextUtils {
                 result.append(c);
             }
         }
-        return result;
+        return result.toString();  // ← PERBAIKAN: toString()
     }
     
     public static String format(String message) {
