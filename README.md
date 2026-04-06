@@ -64,7 +64,7 @@
 
 ## 📥 ɪɴꜱᴛᴀʟʟᴀᴛɪᴏɴ
 
-1. **Download** `StellarCore-1.0.0.jar` dari [Releases](https://github.com/StellarProject-Dev/StellarCore/releases)
+1. **Download** `StellarCore.jar` dari [Releases](https://github.com/StellarProject-Dev/StellarCore/releases)
 2. **Copy** ke folder `plugins/` server Minecraft
 3. **Restart** server
 4. **Konfigurasi** di `plugins/StellarCore/config.yml`
