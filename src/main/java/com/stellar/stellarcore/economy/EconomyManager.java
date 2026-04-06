@@ -3,7 +3,6 @@ package com.stellar.stellarcore.economy;
 import com.stellar.stellarcore.StellarCore;
 import com.stellar.stellarcore.utils.TextUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import java.io.File;
@@ -13,59 +12,47 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EconomyManager {
     
     private final Map<UUID, Double> balances = new ConcurrentHashMap<>();
-    private final Map<UUID, Integer> dailyStreak = new HashMap<>();
     private final Map<UUID, Long> lastDaily = new HashMap<>();
+    private final Map<UUID, Integer> dailyStreak = new HashMap<>();
     private final File dataFile;
-    private FileConfiguration dataConfig;
     
     public EconomyManager() {
         dataFile = new File(StellarCore.getInstance().getDataFolder(), "balances.yml");
-        if (!dataFile.exists()) {
-            try { dataFile.createNewFile(); } catch (Exception e) {}
-        }
         loadData();
-        
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!balances.containsKey(p.getUniqueId())) {
-                double startBal = StellarCore.getInstance().getConfig().getDouble("economy.starting_balance", 100);
-                balances.put(p.getUniqueId(), startBal);
-            }
-        }
     }
     
     private void loadData() {
-        dataConfig = YamlConfiguration.loadConfiguration(dataFile);
-        for (String key : dataConfig.getKeys(false)) {
+        if (!dataFile.exists()) return;
+        
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(dataFile);
+        for (String key : config.getKeys(false)) {
             try {
                 UUID uuid = UUID.fromString(key);
-                double balance = dataConfig.getDouble(key + ".balance", 100);
-                int streak = dataConfig.getInt(key + ".daily_streak", 0);
-                long last = dataConfig.getLong(key + ".last_daily", 0);
-                balances.put(uuid, balance);
-                dailyStreak.put(uuid, streak);
-                lastDaily.put(uuid, last);
+                balances.put(uuid, config.getDouble(key + ".balance", 100.0));
+                dailyStreak.put(uuid, config.getInt(key + ".streak", 0));
+                lastDaily.put(uuid, config.getLong(key + ".last_daily", 0));
             } catch (Exception ignored) {}
         }
     }
     
-    public void saveAll() {
-        for (Map.Entry<UUID, Double> entry : balances.entrySet()) {
-            String uuid = entry.getKey().toString();
-            dataConfig.set(uuid + ".balance", entry.getValue());
-            dataConfig.set(uuid + ".daily_streak", dailyStreak.getOrDefault(entry.getKey(), 0));
-            dataConfig.set(uuid + ".last_daily", lastDaily.getOrDefault(entry.getKey(), 0L));
+    public void saveData() {
+        YamlConfiguration config = new YamlConfiguration();
+        for (UUID uuid : balances.keySet()) {
+            config.set(uuid.toString() + ".balance", balances.get(uuid));
+            config.set(uuid.toString() + ".streak", dailyStreak.getOrDefault(uuid, 0));
+            config.set(uuid.toString() + ".last_daily", lastDaily.getOrDefault(uuid, 0L));
         }
-        try { dataConfig.save(dataFile); } catch (Exception e) { e.printStackTrace(); }
+        try { config.save(dataFile); } catch (Exception e) { e.printStackTrace(); }
     }
     
     public double getBalance(Player p) {
         return balances.getOrDefault(p.getUniqueId(), 
-            StellarCore.getInstance().getConfig().getDouble("economy.starting_balance", 100));
+            StellarCore.getInstance().getConfig().getDouble("economy.starting_balance", 100.0));
     }
     
     public void setBalance(Player p, double amount) {
         balances.put(p.getUniqueId(), Math.max(0, amount));
-        saveAll();
+        saveData();
     }
     
     public void addBalance(Player p, double amount) {
@@ -87,38 +74,36 @@ public class EconomyManager {
     }
     
     public void claimDaily(Player p) {
-        long last = lastDaily.getOrDefault(p.getUniqueId(), 0L);
         long now = System.currentTimeMillis();
-        long dayInMillis = 24 * 60 * 60 * 1000;
+        long last = lastDaily.getOrDefault(p.getUniqueId(), 0L);
+        long dayMillis = 24 * 60 * 60 * 1000;
         
-        int streak = dailyStreak.getOrDefault(p.getUniqueId(), 0);
-        int resetAfter = StellarCore.getInstance().getConfig().getInt("daily_reward.reset_after_days", 2);
-        
-        if (now - last > dayInMillis * resetAfter) {
-            streak = 0;
-        }
-        
-        if (now - last < dayInMillis) {
-            p.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄʏᴏᴜ ᴀʟʀᴇᴀᴅʏ ᴄʟᴀɪᴍᴇᴅ ᴛᴏᴅᴀʏ!"));
+        if (now - last < dayMillis) {
+            long remaining = dayMillis - (now - last);
+            long hours = remaining / (60 * 60 * 1000);
+            p.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄʏᴏᴜ ᴄᴀɴ ᴄʟᴀɪᴍ ᴀɢᴀɪɴ ɪɴ &ᴇ" + hours + " &ᴄʜᴏᴜʀꜱ"));
             return;
         }
         
-        int baseReward = StellarCore.getInstance().getConfig().getInt("daily_reward.base_amount", 100);
-        int bonusPerDay = StellarCore.getInstance().getConfig().getInt("daily_reward.bonus_per_day", 10);
+        int streak = dailyStreak.getOrDefault(p.getUniqueId(), 0);
+        if (now - last > dayMillis * 2) streak = 0;
+        
+        double baseReward = StellarCore.getInstance().getConfig().getDouble("daily_reward.base_amount", 100.0);
+        double bonusPerDay = StellarCore.getInstance().getConfig().getDouble("daily_reward.bonus_per_day", 10.0);
         int maxBonus = StellarCore.getInstance().getConfig().getInt("daily_reward.max_bonus_days", 30);
         
-        int bonus = Math.min(streak, maxBonus) * bonusPerDay;
-        int totalReward = baseReward + bonus;
+        int bonusDays = Math.min(streak, maxBonus);
+        double totalReward = baseReward + (bonusDays * bonusPerDay);
         
         streak++;
         dailyStreak.put(p.getUniqueId(), streak);
         lastDaily.put(p.getUniqueId(), now);
         addBalance(p, totalReward);
         
-        p.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀ✨ ᴅᴀɪʟʏ ʀᴇᴡᴀʀᴅ: &6⍟" + totalReward));
-        p.sendMessage(TextUtils.format("&7ꜱᴛʀᴇᴀᴋ: &" + streak + " ᴅᴀʏꜱ (+⍟" + bonus + ")"));
+        p.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀ✨ ᴅᴀɪʟʏ ʀᴇᴡᴀʀᴅ: " + formatCurrency(totalReward)));
+        p.sendMessage(TextUtils.format("&7ꜱᴛʀᴇᴀᴋ: &ᴇ" + streak + " &7ᴅᴀʏꜱ (+" + formatCurrency(bonusDays * bonusPerDay) + ")"));
         
-        saveAll();
+        saveData();
     }
     
     public List<Map.Entry<UUID, Double>> getTopBalances(int limit) {
@@ -132,7 +117,28 @@ public class EconomyManager {
         return TextUtils.format("&6" + symbol + "&ᴇ" + String.format("%.2f", amount));
     }
     
-    // METHOD BARU
+    public void applyInterestToAll() {
+        if (!StellarCore.getInstance().getConfig().getBoolean("interest.enabled", true)) return;
+        
+        double rate = StellarCore.getInstance().getConfig().getDouble("interest.rate", 1.5);
+        double maxInterest = StellarCore.getInstance().getConfig().getDouble("interest.max_interest", 1000.0);
+        double minBalance = StellarCore.getInstance().getConfig().getDouble("interest.min_balance", 100.0);
+        
+        for (Map.Entry<UUID, Double> entry : balances.entrySet()) {
+            if (entry.getValue() >= minBalance) {
+                double interest = entry.getValue() * (rate / 100);
+                if (interest > maxInterest) interest = maxInterest;
+                balances.put(entry.getKey(), entry.getValue() + interest);
+                
+                Player p = Bukkit.getPlayer(entry.getKey());
+                if (p != null && p.isOnline()) {
+                    p.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀ✨ ɪɴᴛᴇʀᴇꜱᴛ: " + formatCurrency(interest)));
+                }
+            }
+        }
+        saveData();
+    }
+    
     public int getTotalPlayers() {
         return balances.size();
     }
