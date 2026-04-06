@@ -3,29 +3,19 @@
 # ═══════════════════════════════════════════════
 
 economy:
-  starting_balance: 100
+  starting_balance: 100.0
   currency_symbol: "⍟"
-  currency_name: "ꜱᴛᴇʟʟᴀʀ"
-  min_pay: 1
-  max_pay: -1
+  min_pay: 1.0
 
 daily_reward:
   enabled: true
-  base_amount: 100
-  bonus_per_day: 10
+  base_amount: 100.0
+  bonus_per_day: 10.0
   max_bonus_days: 30
-  reset_after_days: 2
 
 interest:
   enabled: true
   rate: 1.5
   interval_minutes: 60
-  max_interest: 1000
-  min_balance_for_interest: 100
-
-messages:
-  prefix: "&8[&6⍟&8]&7 "
-  no_permission: "&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"
-  player_not_found: "&ᴄᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!"
-  invalid_amount: "&ᴄɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ!"
-  insufficient_funds: "&ᴄɪɴꜱᴜꜰꜰɪᴄɪᴇɴᴛ ꜱᴛᴇʟʟᴀʀ!"
+  max_interest: 1000.0
+  min_balance: 100.0
