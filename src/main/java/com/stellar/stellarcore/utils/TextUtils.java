@@ -11,13 +11,9 @@ public class TextUtils {
         StringBuilder result = new StringBuilder();
         for (char c : text.toCharArray()) {
             int index = NORMAL.indexOf(c);
-            if (index >= 0) {
-                result.append(SMALLCAPS.charAt(index));
-            } else {
-                result.append(c);
-            }
+            result.append(index >= 0 ? SMALLCAPS.charAt(index) : c);
         }
-        return result.toString();  // ← PERBAIKAN: toString()
+        return result.toString();
     }
     
     public static String format(String message) {
