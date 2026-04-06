@@ -16,246 +16,90 @@ public class SCCommand implements CommandExecutor {
     
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        
         if (args.length == 0) {
-            sendMainMenu(sender);
+            sendMenu(sender);
             return true;
         }
         
         switch (args[0].toLowerCase()) {
-            
-            // ========== PLAYER COMMANDS ==========
             case "menu":
-            case "help":
-                sendMainMenu(sender);
+                sendMenu(sender);
                 break;
-                
             case "balance":
             case "bal":
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴏɴʟʏ!"));
-                    return true;
-                }
-                Player p = (Player) sender;
-                double bal = StellarCore.getInstance().getEconomyManager().getBalance(p);
-                sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ: " + 
+                if (!(sender instanceof Player)) return true;
+                double bal = StellarCore.getInstance().getEconomyManager().getBalance((Player) sender);
+                sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀʙᴀʟᴀɴᴄᴇ: " + 
                     StellarCore.getInstance().getEconomyManager().formatCurrency(bal)));
                 break;
-                
             case "pay":
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴏɴʟʏ!"));
-                    return true;
-                }
+                if (!(sender instanceof Player)) return true;
                 if (args.length < 3) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴜꜱᴀɢᴇ: &7/ꜱᴄ ᴘᴀʏ <ᴘʟᴀʏᴇʀ> <ᴀᴍᴏᴜɴᴛ>"));
+                    sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄᴜꜱᴀɢᴇ: &7/ꜱᴄ ᴘᴀʏ <ᴘʟᴀʏᴇʀ> <ᴀᴍᴏᴜɴᴛ>"));
                     return true;
                 }
                 Player from = (Player) sender;
                 Player to = Bukkit.getPlayer(args[1]);
                 if (to == null) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!"));
+                    sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!"));
                     return true;
                 }
                 double amount;
-                try {
-                    amount = Double.parseDouble(args[2]);
-                } catch (NumberFormatException e) {
-                    sender.sendMessage(TextUtils.format("&ᴄɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ!"));
+                try { amount = Double.parseDouble(args[2]); } catch (NumberFormatException e) {
+                    sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ!"));
                     return true;
                 }
                 if (!StellarCore.getInstance().getEconomyManager().hasEnough(from, amount)) {
-                    sender.sendMessage(TextUtils.format("&ᴄɪɴꜱᴜꜰꜰɪᴄɪᴇɴᴛ ꜱᴛᴇʟʟᴀʀ!"));
+                    sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄɪɴꜱᴜꜰꜰɪᴄɪᴇɴᴛ ꜰᴜɴᴅꜱ!"));
                     return true;
                 }
                 StellarCore.getInstance().getEconomyManager().withdraw(from, amount);
                 StellarCore.getInstance().getEconomyManager().deposit(to, amount);
                 String formatted = StellarCore.getInstance().getEconomyManager().formatCurrency(amount);
-                from.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀʏᴏᴜ ꜱᴇɴᴛ " + formatted + " &ᴀᴛᴏ &ʙ" + to.getName()));
-                to.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀʏᴏᴜ ʀᴇᴄᴇɪᴠᴇᴅ " + formatted + " &ᴀꜰʀᴏᴍ &ʙ" + from.getName()));
+                from.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀꜱᴇɴᴛ " + formatted + " &ᴀᴛᴏ &ʙ" + to.getName()));
+                to.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀʀᴇᴄᴇɪᴠᴇᴅ " + formatted + " &ᴀꜰʀᴏᴍ &ʙ" + from.getName()));
                 break;
-                
             case "top":
                 List<Map.Entry<UUID, Double>> top = StellarCore.getInstance().getEconomyManager().getTopBalances(10);
-                sender.sendMessage(TextUtils.format("&6&ʟ=== ᴛᴏᴘ 10 ʀɪᴄʜᴇꜱᴛ ꜱᴛᴇʟʟᴀʀ ==="));
+                sender.sendMessage(TextUtils.format("&6&ʟ=== ᴛᴏᴘ 10 ʀɪᴄʜᴇꜱᴛ ==="));
                 int rank = 1;
                 for (Map.Entry<UUID, Double> entry : top) {
-                    OfflinePlayer off = Bukkit.getOfflinePlayer(entry.getKey());
-                    String name = off.getName() != null ? off.getName() : "Unknown";
-                    sender.sendMessage(TextUtils.format("&7" + rank + ". &ғ" + name + " &7- " + 
-                        StellarCore.getInstance().getEconomyManager().formatCurrency(entry.getValue())));
+                    OfflinePlayer p = Bukkit.getOfflinePlayer(entry.getKey());
+                    sender.sendMessage(TextUtils.format("&7" + rank + ". &ғ" + (p.getName() != null ? p.getName() : "Unknown") + 
+                        " &7- " + StellarCore.getInstance().getEconomyManager().formatCurrency(entry.getValue())));
                     rank++;
                 }
                 break;
-                
             case "daily":
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴏɴʟʏ!"));
-                    return true;
-                }
+                if (!(sender instanceof Player)) return true;
                 StellarCore.getInstance().getEconomyManager().claimDaily((Player) sender);
                 break;
-                
             case "shop":
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴏɴʟʏ!"));
-                    return true;
-                }
-                // Open shop
-                com.stellar.stellarcore.commands.ShopCommand shop = new com.stellar.stellarcore.commands.ShopCommand();
-                shop.onCommand(sender, cmd, label, new String[0]);
+                if (!(sender instanceof Player)) return true;
+                new ShopCommand().onCommand(sender, cmd, label, new String[0]);
                 break;
-                
-            case "status":
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴏɴʟʏ!"));
-                    return true;
-                }
-                Player target = (Player) sender;
-                double balance = StellarCore.getInstance().getEconomyManager().getBalance(target);
-                sender.sendMessage(TextUtils.format("&6&ʟ=== ʏᴏᴜʀ ꜱᴛᴀᴛᴜꜱ ==="));
-                sender.sendMessage(TextUtils.format("&7ᴘʟᴀʏᴇʀ: &ғ" + target.getName()));
-                sender.sendMessage(TextUtils.format("&7ʙᴀʟᴀɴᴄᴇ: " + StellarCore.getInstance().getEconomyManager().formatCurrency(balance)));
-                sender.sendMessage(TextUtils.format("&7ᴘᴀᴄᴋ ꜱᴛᴀᴛᴜꜱ: &ᴀᴀᴄᴛɪᴠᴇ"));
-                break;
-            
-            // ========== ADMIN COMMANDS ==========
             case "reload":
                 if (!sender.hasPermission("stellar.admin")) {
-                    sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
+                    sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
                     return true;
                 }
                 StellarCore.getInstance().reloadConfig();
-                sender.sendMessage(TextUtils.format("&ᴀᴄᴏɴꜰɪɢᴜʀᴀᴛɪᴏɴ ʀᴇʟᴏᴀᴅᴇᴅ!"));
+                sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀᴄᴏɴꜰɪɢ ʀᴇʟᴏᴀᴅᴇᴅ!"));
                 break;
-                
-            case "give":
-                if (!sender.hasPermission("stellar.admin")) {
-                    sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
-                    return true;
-                }
-                if (args.length < 3) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴜꜱᴀɢᴇ: &7/ꜱᴄ ɢɪᴠᴇ <ᴘʟᴀʏᴇʀ> <ᴀᴍᴏᴜɴᴛ>"));
-                    return true;
-                }
-                Player giveTarget = Bukkit.getPlayer(args[1]);
-                if (giveTarget == null) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!"));
-                    return true;
-                }
-                double giveAmount;
-                try {
-                    giveAmount = Double.parseDouble(args[2]);
-                } catch (NumberFormatException e) {
-                    sender.sendMessage(TextUtils.format("&ᴄɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ!"));
-                    return true;
-                }
-                StellarCore.getInstance().getEconomyManager().addBalance(giveTarget, giveAmount);
-                sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀᴀᴅᴅᴇᴅ " + 
-                    StellarCore.getInstance().getEconomyManager().formatCurrency(giveAmount) + " &ᴀᴛᴏ &ʙ" + giveTarget.getName()));
-                break;
-                
-            case "set":
-                if (!sender.hasPermission("stellar.admin")) {
-                    sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
-                    return true;
-                }
-                if (args.length < 3) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴜꜱᴀɢᴇ: &7/ꜱᴄ ꜱᴇᴛ <ᴘʟᴀʏᴇʀ> <ᴀᴍᴏᴜɴᴛ>"));
-                    return true;
-                }
-                Player setTarget = Bukkit.getPlayer(args[1]);
-                if (setTarget == null) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!"));
-                    return true;
-                }
-                double setAmount;
-                try {
-                    setAmount = Double.parseDouble(args[2]);
-                } catch (NumberFormatException e) {
-                    sender.sendMessage(TextUtils.format("&ᴄɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ!"));
-                    return true;
-                }
-                StellarCore.getInstance().getEconomyManager().setBalance(setTarget, setAmount);
-                sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀꜱᴇᴛ &ʙ" + setTarget.getName() + " &ᴀʙᴀʟᴀɴᴄᴇ ᴛᴏ " + 
-                    StellarCore.getInstance().getEconomyManager().formatCurrency(setAmount)));
-                break;
-                
-            case "take":
-                if (!sender.hasPermission("stellar.admin")) {
-                    sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
-                    return true;
-                }
-                if (args.length < 3) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴜꜱᴀɢᴇ: &7/ꜱᴄ ᴛᴀᴋᴇ <ᴘʟᴀʏᴇʀ> <ᴀᴍᴏᴜɴᴛ>"));
-                    return true;
-                }
-                Player takeTarget = Bukkit.getPlayer(args[1]);
-                if (takeTarget == null) {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ!"));
-                    return true;
-                }
-                double takeAmount;
-                try {
-                    takeAmount = Double.parseDouble(args[2]);
-                } catch (NumberFormatException e) {
-                    sender.sendMessage(TextUtils.format("&ᴄɪɴᴠᴀʟɪᴅ ᴀᴍᴏᴜɴᴛ!"));
-                    return true;
-                }
-                if (StellarCore.getInstance().getEconomyManager().withdraw(takeTarget, takeAmount)) {
-                    sender.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴄʀᴇᴍᴏᴠᴇᴅ " + 
-                        StellarCore.getInstance().getEconomyManager().formatCurrency(takeAmount) + " &ᴄꜰʀᴏᴍ &ʙ" + takeTarget.getName()));
-                } else {
-                    sender.sendMessage(TextUtils.format("&ᴄᴘʟᴀʏᴇʀ ᴅᴏᴇꜱɴ'ᴛ ʜᴀᴠᴇ ᴇɴᴏᴜɢʜ!"));
-                }
-                break;
-                
-            case "stats":
-                if (!sender.hasPermission("stellar.admin")) {
-                    sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
-                    return true;
-                }
-                sender.sendMessage(TextUtils.format("&6&ʟ=== ꜱᴛᴇʟʟᴀʀᴄᴏʀᴇ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ ==="));
-                sender.sendMessage(TextUtils.format("&7ᴏɴʟɪɴᴇ ᴘʟᴀʏᴇʀꜱ: &ᴀ" + Bukkit.getOnlinePlayers().size()));
-                sender.sendMessage(TextUtils.format("&7ᴛᴏᴛᴀʟ ʀᴇɢɪꜱᴛᴇʀᴇᴅ: &ᴀ" + StellarCore.getInstance().getEconomyManager().getTotalPlayers()));
-                sender.sendMessage(TextUtils.format("&7ᴠᴇʀꜱɪᴏɴ: &ᴀ" + StellarCore.getInstance().getDescription().getVersion()));
-                break;
-                
-            case "debug":
-                if (!sender.hasPermission("stellar.admin")) {
-                    sender.sendMessage(TextUtils.format("&ᴄɴᴏ ᴘᴇʀᴍɪꜱꜱɪᴏɴ!"));
-                    return true;
-                }
-                sender.sendMessage(TextUtils.format("&ᴀᴅᴇʙᴜɢ ᴍᴏᴅᴇ ᴛᴏɢɢʟᴇᴅ"));
-                break;
-                
             default:
-                sendMainMenu(sender);
+                sendMenu(sender);
                 break;
         }
         return true;
     }
     
-    private void sendMainMenu(CommandSender sender) {
+    private void sendMenu(CommandSender sender) {
         sender.sendMessage(TextUtils.format("&6&ʟ=== ꜱᴄ ᴍᴇɴᴜ ==="));
-        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ʙᴀʟᴀɴᴄᴇ &8- &7ᴄʜᴇᴄᴋ ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ"));
-        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴘᴀʏ &8- &7ꜱᴇɴᴅ ᴍᴏɴᴇʏ ᴛᴏ ᴘʟᴀʏᴇʀ"));
-        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴛᴏᴘ &8- &7ᴠɪᴇᴡ ʀɪᴄʜᴇꜱᴛ ᴘʟᴀʏᴇʀꜱ"));
-        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴅᴀɪʟʏ &8- &7ᴄʟᴀɪᴍ ᴅᴀɪʟʏ ʀᴇᴡᴀʀᴅ"));
+        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ʙᴀʟᴀɴᴄᴇ &8- &7ᴄʜᴇᴄᴋ ʙᴀʟᴀɴᴄᴇ"));
+        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴘᴀʏ &8- &7ꜱᴇɴᴅ ᴍᴏɴᴇʏ"));
+        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴛᴏᴘ &8- &7ᴛᴏᴘ 10 ʀɪᴄʜᴇꜱᴛ"));
+        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴅᴀɪʟʏ &8- &7ᴄʟᴀɪᴍ ᴅᴀɪʟʏ"));
         sender.sendMessage(TextUtils.format("&7/ꜱᴄ ꜱʜᴏᴘ &8- &7ᴏᴘᴇɴ ꜱʜᴏᴘ"));
-        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ꜱᴛᴀᴛᴜꜱ &8- &7ᴠɪᴇᴡ ʏᴏᴜʀ ꜱᴛᴀᴛᴜꜱ"));
-        sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴍᴇɴᴜ &8- &7ꜱʜᴏᴡ ᴛʜɪꜱ ᴍᴇɴᴜ"));
-        
-        if (sender.hasPermission("stellar.admin")) {
-            sender.sendMessage(TextUtils.format("&6&ʟᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅꜱ:"));
-            sender.sendMessage(TextUtils.format("&7/ꜱᴄ ʀᴇʟᴏᴀᴅ &8- &7ʀᴇʟᴏᴀᴅ ᴄᴏɴꜰɪɢ"));
-            sender.sendMessage(TextUtils.format("&7/ꜱᴄ ɢɪᴠᴇ &8- &7ɢɪᴠᴇ ᴍᴏɴᴇʏ ᴛᴏ ᴘʟᴀʏᴇʀ"));
-            sender.sendMessage(TextUtils.format("&7/ꜱᴄ ꜱᴇᴛ &8- &7ꜱᴇᴛ ᴘʟᴀʏᴇʀ ʙᴀʟᴀɴᴄᴇ"));
-            sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴛᴀᴋᴇ &8- &7ʀᴇᴍᴏᴠᴇ ᴍᴏɴᴇʏ ꜰʀᴏᴍ ᴘʟᴀʏᴇʀ"));
-            sender.sendMessage(TextUtils.format("&7/ꜱᴄ ꜱᴛᴀᴛꜱ &8- &7ᴠɪᴇᴡ ᴘʟᴜɢɪɴ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ"));
-            sender.sendMessage(TextUtils.format("&7/ꜱᴄ ᴅᴇʙᴜɢ &8- &7ᴛᴏɢɢʟᴇ ᴅᴇʙᴜɢ ᴍᴏᴅᴇ"));
-        }
-        
         sender.sendMessage(TextUtils.format("&8&ᴏꜱᴛᴀʀᴛᴇᴅ ʙʏ ꜱᴛᴇʟʟᴀʀᴘʀᴏᴊᴇᴄᴛ"));
     }
 }
