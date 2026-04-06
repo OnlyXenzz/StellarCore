@@ -12,18 +12,15 @@ import java.util.Map;
 import java.util.UUID;
 
 public class TopCommand implements CommandExecutor {
-    
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+    public boolean onCommand(CommandSender s, Command c, String l, String[] a) {
         List<Map.Entry<UUID, Double>> top = StellarCore.getInstance().getEconomyManager().getTopBalances(10);
-        
-        sender.sendMessage(TextUtils.format("&6&ʟ=== ᴛᴏᴘ 10 ʀɪᴄʜᴇꜱᴛ ꜱᴛᴇʟʟᴀʀ ==="));
+        s.sendMessage(TextUtils.format("&6&ʟ=== ᴛᴏᴘ 10 ʀɪᴄʜᴇꜱᴛ ==="));
         int rank = 1;
         for (Map.Entry<UUID, Double> entry : top) {
             OfflinePlayer p = Bukkit.getOfflinePlayer(entry.getKey());
-            String name = p.getName() != null ? p.getName() : "Unknown";
-            sender.sendMessage(TextUtils.format("&7" + rank + ". &ғ" + name + " &7- " + 
-                StellarCore.getInstance().getEconomyManager().formatCurrency(entry.getValue())));
+            s.sendMessage(TextUtils.format("&7" + rank + ". &ғ" + (p.getName() != null ? p.getName() : "Unknown") + 
+                " &7- " + StellarCore.getInstance().getEconomyManager().formatCurrency(entry.getValue())));
             rank++;
         }
         return true;
