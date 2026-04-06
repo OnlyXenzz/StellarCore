@@ -17,75 +17,35 @@ public class StellarCore extends JavaPlugin {
         instance = this;
         saveDefaultConfig();
         
-        // Init economy manager
         economyManager = new EconomyManager();
         
         // Register commands
-        registerCommands();
-        
-        // Register listeners (untuk shop GUI)
-        registerListeners();
-        
-        // Start interest scheduler (every 1 hour)
-        startInterestScheduler();
-        
-        getLogger().info(TextUtils.toSmallCaps("StellarCore v1.0.0 Enabled!"));
-    }
-    
-    @Override
-    public void onDisable() {
-        if (economyManager != null) {
-            economyManager.saveAll();
-        }
-        getLogger().info(TextUtils.toSmallCaps("StellarCore Disabled!"));
-    }
-    
-    private void registerCommands() {
         getCommand("sc").setExecutor(new SCCommand());
         getCommand("balance").setExecutor(new BalanceCommand());
         getCommand("pay").setExecutor(new PayCommand());
         getCommand("top").setExecutor(new TopCommand());
         getCommand("daily").setExecutor(new DailyCommand());
-        getCommand("stellaradmin").setExecutor(new AdminCommand());
         getCommand("shop").setExecutor(new ShopCommand());
-    }
-    
-    private void registerListeners() {
-        // REGISTER LISTENER UNTUK SHOP (INI YANG KAMU MINTA)
-        getServer().getPluginManager().registerEvents(new ShopCommand(), this);
-    }
-    
-    private void startInterestScheduler() {
-        int interval = getConfig().getInt("interest.interval_minutes", 60);
-        long ticks = interval * 60 * 20L;
         
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            if (getConfig().getBoolean("interest.enabled", true)) {
-                double rate = getConfig().getDouble("interest.rate", 1.5);
-                double maxInterest = getConfig().getDouble("interest.max_interest", 1000);
-                double minBalance = getConfig().getDouble("interest.min_balance_for_interest", 100);
-                
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    double balance = economyManager.getBalance(p);
-                    if (balance >= minBalance) {
-                        double interest = balance * (rate / 100);
-                        if (interest > maxInterest) {
-                            interest = maxInterest;
-                        }
-                        economyManager.addBalance(p, interest);
-                        p.sendMessage(TextUtils.getPrefix() + TextUtils.format("&ᴀ✨ ʏᴏᴜ ʀᴇᴄᴇɪᴠᴇᴅ " + 
-                            economyManager.formatCurrency(interest) + " &ᴀɪɴᴛᴇʀᴇꜱᴛ!"));
-                    }
-                }
-            }
-        }, ticks, ticks);
+        // Register listener untuk shop
+        getServer().getPluginManager().registerEvents(new ShopCommand(), this);
+        
+        // Start interest scheduler (every hour)
+        int interval = getConfig().getInt("interest.interval_minutes", 60);
+        Bukkit.getScheduler().runTaskTimer(this, () -> economyManager.applyInterestToAll(), 20L * 60 * interval, 20L * 60 * interval);
+        
+        // Auto-save every 5 minutes
+        Bukkit.getScheduler().runTaskTimer(this, () -> economyManager.saveData(), 6000L, 6000L);
+        
+        getLogger().info(TextUtils.toSmallCaps("StellarCore v2.5.0 Enabled!"));
     }
     
-    public static StellarCore getInstance() {
-        return instance;
+    @Override
+    public void onDisable() {
+        economyManager.saveData();
+        getLogger().info(TextUtils.toSmallCaps("StellarCore Disabled!"));
     }
     
-    public EconomyManager getEconomyManager() {
-        return economyManager;
-    }
+    public static StellarCore getInstance() { return instance; }
+    public EconomyManager getEconomyManager() { return economyManager; }
 }
